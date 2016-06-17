@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<script language="JavaScript">
+		var wsuri = 'ws://' + window.location.hostname
+				+ ':8080/mobile-web/weixin?id=map&aim=ctr';
+		var ws = null;
+		function connectEndpoint() {
+			ws = new WebSocket(wsuri);
+			ws.onmessage = function(evt) {
+				alert(evt.data);
+			};
+
+			ws.onclose = function(evt) {
+				alert("close");
+			};
+
+			ws.onopen = function(evt) {
+				alert("open");
+			};
+		}
+
+		function sendmsg() {
+			ws.send(document.getElementById("send").value);
+		}
+	</script>
+<body onload="connectEndpoint()">
+	<input type="text" size="20" value="5" id="send">
+	<input type="button" value="send" onclick="sendmsg()">
+	<br>
+</body>
+</html>

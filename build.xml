@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+	<property name="build.dir" value="${basedir}/build" />
+	<property name="dist.dir" value="${basedir}/dist" />
+	<property name="src.dir" value="src" description="项目本身src" />
+	<property name="warName" value="mobile-web" description="打好war的名称" />
+	<!-- 设置项目访问路径名称-->
+	<property name="path" value="/mobile-web" />
+
+	<!-- 配置远程部署基本信息 -->
+	<property name="url" value="http://192.168.0.134:8080/manager/text/" />
+	<property name="username" value="admin" />
+	<property name="password" value="sosino" />
+
+	<!--配置项目编译依赖jar文件所在目录位置-->
+	<path id="project.classpath" description="jar路径">
+		<fileset dir="WebContent/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="E:\sosino\apache-tomcat-8.0.33\lib" description="tomcat依赖jar">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+
+	<!--删除多文件-->
+	<target name="clean">
+		<delete dir="${dist.dir}">
+		</delete>
+		<delete dir="${build.dir}">
+		</delete>
+	</target>
+
+	<!--创建目录-->
+	<target name="init" depends="clean">
+		<mkdir dir="${build.dir}/classFile" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+	<!--编译java文件-->
+	<target name="compile" depends="init" description="编译java文件">
+		<javac srcdir="${src.dir}" destdir="${build.dir}/classFile">
+			<compilerarg line="-encoding UTF-8" />
+			<classpath refid="project.classpath">
+			</classpath>
+		</javac>
+		<copy todir="${build.dir}/classFile">
+			<fileset dir="${src.dir}">
+				<include name="*.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!--打war包-->
+	<target name="war" description="WebSip manage" depends="compile">
+		<war destfile="${dist.dir}/${warName}.war" webxml="WebContent/WEB-INF/web.xml">
+			<fileset dir="WebContent" excludes="WEB-INF/**" />
+			<lib dir="WebContent/WEB-INF/lib" />
+			<classes dir="${build.dir}/classFile" />
+		</war>
+	</target>
+
+	<!-- 为远程发布到tomcat 配置ant任务 -->
+	<target name="_def_tomcat_tasks">
+		<!-- tasks: deploy,undeploy,reload,stop,start,list,roles,resources -->
+		<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" />
+		<taskdef name="list" classname="org.apache.catalina.ant.ListTask" />
+		<taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask" />
+		<taskdef name="resources" classname="org.apache.catalina.ant.ResourcesTask" />
+		<!--<taskdef name="roles" classname="org.apache.catalina.ant.RolesTask" />-->
+		<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
+		<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
+		<taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask" />
+	</target>
+
+	<!--重新部署任务-->
+	<target name="redeploy" description="Remove and Install web application" depends="_def_tomcat_tasks">
+		<antcall target="undeploy" />
+		<antcall target="deploy" />
+	</target>
+
+	<!--部署-->
+	<target name="deploy" description="Install web application" depends="_def_tomcat_tasks,war">
+		<deploy url="${url}" username="${username}" password="${password}" path="${path}" war="${dist.dir}/${warName}.war" />
+	</target>
+	<!--删除部署-->
+	<target name="undeploy" description="Remove web application" depends="_def_tomcat_tasks">
+		<undeploy url="${url}" username="${username}" password="${password}" path="${path}" />
+	</target>
+	<!--重新启动-->
+	<target name="reload" description="Reload web application" depends="_def_tomcat_tasks,compile">
+		<reload url="${url}" username="${username}" password="${password}" path="${path}" />
+	</target>
+</project>
